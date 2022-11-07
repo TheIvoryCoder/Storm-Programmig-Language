@@ -46,20 +46,12 @@ def parser(fl):
 
     STfunc = {
         "print": {
-            "params": {
-                "length": 1,
-                "type": {'1': ["string", "int", "float", "bool"]},
-            },
             "output_type": "run",
-            "output": "print('$params[0]')"
+            "output": "print($params)"
         },
         "replace": {
-            "params": {
-                "length": 2,
-                "type": {'1': 'string', '2': 'string'}
-            },
             "output_type": "return",
-            "output": "$parent.replace($params[0], $params[1])"
+            "output": "$parent.replace($params)"
         }
     }
     while l < len(lines):
@@ -73,9 +65,12 @@ def parser(fl):
             token = tokens[t]
 
             if token[0] == "@":
+                params = " ".join(tokens[t+1:])
                 token = token[1:len(token)]
                 if inD (token, STfunc):
-                    exec(STfunc[token]["output"])
+                    fn_output = STfunc[token]["output"].replace("$params", params)
+                    if STfunc[token]["output_type"] == "run":
+                        exec(fn_output)
             t += 1
 
         # parse tokens
