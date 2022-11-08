@@ -39,7 +39,6 @@ def lexer(c):
     return tokens
 
 def parser(fl):
-    output = ""
     fl = open(fl).read()
     lines = lns(fl)
     l = 0
@@ -63,18 +62,21 @@ def parser(fl):
         t = 0
         while t < len(tokens):
             token = tokens[t]
-
-            if token[0] == "@":
+            if token[0] == "@":        
                 params = " ".join(tokens[t+1:])
                 token = token[1:len(token)]
                 if inD (token, STfunc):
+                    if token == "replace":
+                        param_list = tokens[t+1:][2].replace(")","")
+                        params = params.replace(param_list, "").replace(" ", "")
+                        params = params[:len(params)-1]
+
                     fn_output = STfunc[token]["output"].replace("$params", params)
-                    if STfunc[token]["output_type"] == "run":
-                        exec(fn_output)
+                    if "$parent" in fn_output:
+                        fn_output = fn_output.replace("$parent", param_list)
+                    exec(fn_output)
             t += 1
 
         # parse tokens
 
         l += 1
-
-    return output

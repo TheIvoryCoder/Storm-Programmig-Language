@@ -2,7 +2,6 @@ from sys import *
 from interpreter import *
 
 if __name__ == "__main__":
-    content = parser(argv[1])
-    print(content)
+    parser(argv[1])
 
-# python main.py "test.storm"
+# python.exe main.py "test.storm"
