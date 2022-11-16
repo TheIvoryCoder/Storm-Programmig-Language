@@ -1,2 +1,9 @@
-@print "Hello"
-@print "World!"
+$x = 8
+$y = 2
+$z = 12
+
+# square numbers
+
+@square($x, $y) {
+    print $x * $x
+}

@@ -19,6 +19,7 @@ def lexer(c):
     curr = ""
     q_count = 0
     x = 0
+    prev = ""
     while x < len(c):
         char = c[x]
 
@@ -32,8 +33,13 @@ def lexer(c):
         if char == ' ' and in_q == False:
             tokens.append(curr)
             curr = ""
+        elif char == ')' or prev == ")" or char == "(" or prev == "(":
+            tokens.append(curr)
+            curr = char
         else:
             curr += char
+
+        prev = char
         x += 1
     tokens.append(curr)
     return tokens
@@ -47,36 +53,54 @@ def parser(fl):
         "print": {
             "output_type": "run",
             "output": "print($params)"
-        },
-        "replace": {
-            "output_type": "return",
-            "output": "$parent.replace($params)"
         }
     }
+    TempVars = {}
+    Vars = {}
+    Funcs = {}
     while l < len(lines):
         line = lines[l]
-        tokens = lexer(line)
-
-        # parse tokens
-
-        t = 0
-        while t < len(tokens):
-            token = tokens[t]
-            if token[0] == "@":        
-                params = " ".join(tokens[t+1:])
-                token = token[1:len(token)]
-                if inD (token, STfunc):
-                    if token == "replace":
-                        param_list = tokens[t+1:][2].replace(")","")
-                        params = params.replace(param_list, "").replace(" ", "")
-                        params = params[:len(params)-1]
-
-                    fn_output = STfunc[token]["output"].replace("$params", params)
-                    if "$parent" in fn_output:
-                        fn_output = fn_output.replace("$parent", param_list)
-                    exec(fn_output)
-            t += 1
-
-        # parse tokens
-
         l += 1
+        if line[0] != "#":
+            tokens = lexer(line)
+
+            # parse tokens
+
+            t = 0
+            while t < len(tokens):
+                token = tokens[t]
+                if token[0] == "@":        
+                    params = tokens[t+1:]
+                    token = token[1:len(token)]
+                    if inD (token, STfunc):
+                        fparams = ""
+                        for param in params:
+                            param = param.replace("$", "")
+                            if inD(param, Vars):
+                                param = Vars[param]["value"]
+                            fparams += param
+                        fn_output = STfunc[token]["output"].replace("$params", fparams)
+                        if "$parent" in fn_output:
+                            fn_output = fn_output.replace("$parent", param_list)
+                        exec(fn_output)
+                    else:
+                        if line[-1] == "{":
+                            name = token.replace("@","")
+                            params = tokens[t + 2]
+                            print(params)
+                            Funcs[name] = {
+                                "line": l
+                        }
+
+
+                elif token[0] == "$":
+                    val = tokens[t+1:]
+                    val = " ".join(val).replace("=","")
+                    name = token.replace("$", "")
+                    Vars[name] = {
+                        "value": val
+                    }
+                t += 1
+    
+        # parse tokens
+    print(Funcs)
